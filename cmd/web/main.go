@@ -21,21 +21,14 @@ func main() {
 		logError: log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.LUTC|log.Lshortfile),
 	}
 
-	fileServer := http.FileServer(http.Dir("./ui/static/"))
-	mux := http.NewServeMux()
-
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
-
-	mux.HandleFunc("/", app.home)
-	mux.HandleFunc("/snippet/view", app.snipView)
-	mux.HandleFunc("/snippet/create", app.snipCreate)
-
 	app.logInfo.Printf("Starting server on %s", *addr)
+
 	srv := &http.Server{
 		Addr:     *addr,
 		ErrorLog: app.logError,
-		Handler:  mux,
+		Handler:  app.routes(),
 	}
+
 	err := srv.ListenAndServe()
 	app.logError.Fatal(err)
 }
