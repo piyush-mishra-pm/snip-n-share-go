@@ -1,10 +1,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
+
+	"github.com/piyush-mishra-pm/snip-n-share-go/internal/models"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -32,7 +35,17 @@ func (app *application) snipView(w http.ResponseWriter, r *http.Request) {
 	if err != nil || id < 1 {
 		app.notFound(w)
 	}
-	fmt.Fprintf(w, "View a specific snip with ID %d...\n", id)
+	snip, err := app.snips.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	fmt.Fprintf(w, "%+v", snip)
 }
 
 func (app *application) snipCreate(w http.ResponseWriter, r *http.Request) {

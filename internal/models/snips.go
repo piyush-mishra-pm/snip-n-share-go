@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -35,7 +36,19 @@ VALUES(?, ?, UTC_TIMESTAMP(), DATE_ADD(UTC_TIMESTAMP(), INTERVAL ? DAY))`
 }
 
 func (m *SnipModel) Get(id int) (*Snip, error) {
-	return nil, nil
+	stmt := `SELECT id, title, content, created, expires FROM snips
+WHERE expires > UTC_TIMESTAMP() AND id = ?`
+	s := &Snip{}
+
+	if err := m.DB.QueryRow(stmt, id).Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNoRecord
+		} else {
+			return nil, err
+		}
+	}
+
+	return s, nil
 }
 
 func (m *SnipModel) Latest() ([]*Snip, error) {
