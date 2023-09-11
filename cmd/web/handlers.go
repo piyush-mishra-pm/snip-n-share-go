@@ -32,7 +32,7 @@ func (app *application) snipView(w http.ResponseWriter, r *http.Request) {
 	if err != nil || id < 1 {
 		app.notFound(w)
 	}
-	fmt.Fprintf(w, "View a specific snip with ID %d...", id)
+	fmt.Fprintf(w, "View a specific snip with ID %d...\n", id)
 }
 
 func (app *application) snipCreate(w http.ResponseWriter, r *http.Request) {
@@ -41,8 +41,17 @@ func (app *application) snipCreate(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusMethodNotAllowed)
 		return
 	}
-	if _, err := w.Write([]byte("Create a new snip...")); err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+
+	// Dummy Snip item:
+	title := "O snail"
+	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa"
+	expires := 7
+
+	id, err := app.snips.Insert(title, content, expires)
+	if err != nil {
+		app.serverError(w, err)
+		return
 	}
 
+	http.Redirect(w, r, fmt.Sprintf("/snip/view?id=%d", id), http.StatusSeeOther)
 }
