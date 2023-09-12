@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"html/template"
 	"net/http"
 	"strconv"
 
@@ -43,6 +44,7 @@ func (app *application) snipView(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil || id < 1 {
 		app.notFound(w)
+		return
 	}
 	snip, err := app.snips.Get(id)
 	if err != nil {
@@ -54,7 +56,26 @@ func (app *application) snipView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "%+v", snip)
+	files := []string{
+		"./ui/html/base.tmpl.htm", // base must be first in list.
+		"./ui/html/partials/nav.tmpl.htm",
+		"./ui/html/pages/view.tmpl.htm",
+	}
+
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	data := &templateData{
+		Snip: snip,
+	}
+
+	err = ts.ExecuteTemplate(w, "base", data)
+	if err != nil {
+		app.serverError(w, err)
+	}
 }
 
 func (app *application) snipCreate(w http.ResponseWriter, r *http.Request) {
