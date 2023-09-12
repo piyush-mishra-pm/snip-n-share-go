@@ -8,8 +8,9 @@ import (
 )
 
 type templateData struct {
-	Snip  *models.Snip
-	Snips []*models.Snip
+	Snip        *models.Snip
+	Snips       []*models.Snip
+	CurrentYear int
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {
