@@ -52,5 +52,29 @@ WHERE expires > UTC_TIMESTAMP() AND id = ?`
 }
 
 func (m *SnipModel) Latest() ([]*Snip, error) {
-	return nil, nil
+	stmt := `SELECT id, title, content, created, expires FROM snips
+WHERE expires > UTC_TIMESTAMP() ORDER BY id DESC LIMIT 10`
+
+	rows, err := m.DB.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	snips := []*Snip{}
+
+	for rows.Next() {
+		s := &Snip{}
+		err = rows.Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires)
+		if err != nil {
+			return nil, err
+		}
+		snips = append(snips, s)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return snips, nil
 }
