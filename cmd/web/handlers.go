@@ -13,31 +13,34 @@ import (
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		app.notFound(w)
+		return
 	}
 	snips, err := app.snips.Latest()
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
-	for _, snip := range snips {
-		fmt.Fprintf(w, "%+v\n\n", snip)
+
+	files := []string{
+		"./ui/html/base.tmpl.htm", // base must be first in list.
+		"./ui/html/partials/nav.tmpl.htm",
+		"./ui/html/pages/home.tmpl.htm",
 	}
 
-	// files := []string{
-	// 	"./ui/html/base.tmpl.htm", // base must be first in list.
-	// 	"./ui/html/partials/nav.tmpl.htm",
-	// 	"./ui/html/pages/home.tmpl.htm",
-	// }
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
 
-	// ts, err := template.ParseFiles(files...)
-	// if err != nil {
-	// 	app.serverError(w, err)
-	// }
+	data := &templateData{
+		Snips: snips,
+	}
 
-	// err = ts.ExecuteTemplate(w, "base", snips)
-	// if err != nil {
-	// 	app.serverError(w, err)
-	// }
+	err = ts.ExecuteTemplate(w, "base", data)
+	if err != nil {
+		app.serverError(w, err)
+	}
 }
 
 func (app *application) snipView(w http.ResponseWriter, r *http.Request) {
