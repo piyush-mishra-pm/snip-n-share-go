@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"runtime/debug"
@@ -20,4 +21,27 @@ func (app *application) clientError(w http.ResponseWriter, status int) {
 
 func (app *application) notFound(w http.ResponseWriter) {
 	app.clientError(w, http.StatusNotFound)
+}
+
+func (app *application) render(w http.ResponseWriter, status int, page string, data *templateData) {
+	ts, ok := app.templateCache[page]
+	if !ok {
+		err := fmt.Errorf("template %s does not exist", page)
+		app.serverError(w, err)
+		return
+	}
+
+	// Trial write in buffer. If failed, then ServerError.
+	// This check prevents partially rendered pages (which fail due to error midway).
+	buf := new(bytes.Buffer)
+	err := ts.ExecuteTemplate(buf, "base", data)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	// If succeeded writing in buffer, then can send as response.
+	w.WriteHeader(status)
+	if _, err := buf.WriteTo(w); err != nil {
+		app.serverError(w, err)
+	}
 }

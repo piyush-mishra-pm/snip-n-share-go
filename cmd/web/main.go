@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -12,9 +13,10 @@ import (
 )
 
 type application struct {
-	logInfo  *log.Logger
-	logError *log.Logger
-	snips    *models.SnipModel
+	logInfo       *log.Logger
+	logError      *log.Logger
+	snips         *models.SnipModel
+	templateCache map[string]*template.Template
 }
 
 func main() {
@@ -22,17 +24,26 @@ func main() {
 	dsn := flag.String("dsn", "web:4321@/snipnshare?parseTime=true", "MySQL data source name. Example: ")
 	flag.Parse()
 
-	app := &application{
-		logInfo:  log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime|log.LUTC),
-		logError: log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.LUTC|log.Lshortfile),
-	}
+	logInfo := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime|log.LUTC)
+	logError := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.LUTC|log.Lshortfile)
 
 	db, err := openDB(*dsn)
 	if err != nil {
-		app.logError.Fatal(err)
+		logError.Fatal(err)
 	}
 	defer db.Close()
-	app.snips = &models.SnipModel{DB: db}
+
+	templateCache, err := newTemplateCache()
+	if err != nil {
+		logError.Fatal(err)
+	}
+
+	app := &application{
+		logInfo:       logInfo,
+		logError:      logError,
+		snips:         &models.SnipModel{DB: db},
+		templateCache: templateCache,
+	}
 
 	app.logInfo.Printf("Starting server on %s", *addr)
 
