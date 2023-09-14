@@ -48,10 +48,20 @@ func (app *application) snipView(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) snipCreatePost(w http.ResponseWriter, r *http.Request) {
-	// Dummy Snip item:
-	title := "O snail"
-	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa"
-	expires := 7
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	title := r.PostForm.Get("title")
+	content := r.PostForm.Get("content")
+
+	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
 
 	id, err := app.snips.Insert(title, content, expires)
 	if err != nil {
@@ -63,5 +73,6 @@ func (app *application) snipCreatePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) snipCreate(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Display form to create new snip..."))
+	data := app.newTemplateData(r)
+	app.render(w, http.StatusOK, "create.tmpl.htm", data)
 }
