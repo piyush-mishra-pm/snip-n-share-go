@@ -9,5 +9,5 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("/", app.home)
 	mux.HandleFunc("/snip/view", app.snipView)
 	mux.HandleFunc("/snip/create", app.snipCreate)
-	return secureHeaders(mux)
+	return app.logRequest(secureHeaders(mux))
 }
