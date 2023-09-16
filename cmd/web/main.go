@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"flag"
 	"html/template"
@@ -66,6 +67,12 @@ func main() {
 		Addr:     *addr,
 		ErrorLog: app.logError,
 		Handler:  app.routes(),
+		TLSConfig: &tls.Config{
+			CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
+		},
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
 
 	err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
