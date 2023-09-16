@@ -4,6 +4,9 @@
 # Binaries for programs and plugins
 bin/
 
+# tls
+tls/
+
 # Test binary, built with `go test -c`
 *.test
 
