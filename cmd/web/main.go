@@ -7,18 +7,22 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/alexedwards/scs/mysqlstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/piyush-mishra-pm/snip-n-share-go/internal/models"
 )
 
 type application struct {
-	logInfo       *log.Logger
-	logError      *log.Logger
-	snips         *models.SnipModel
-	templateCache map[string]*template.Template
-	formDecoder   *form.Decoder
+	logInfo        *log.Logger
+	logError       *log.Logger
+	snips          *models.SnipModel
+	templateCache  map[string]*template.Template
+	formDecoder    *form.Decoder
+	sessionManager *scs.SessionManager
 }
 
 func main() {
@@ -42,12 +46,17 @@ func main() {
 
 	formDecoder := form.NewDecoder()
 
+	sessionManager := scs.New()
+	sessionManager.Store = mysqlstore.New(db)
+	sessionManager.Lifetime = 12 * time.Hour
+
 	app := &application{
-		logInfo:       logInfo,
-		logError:      logError,
-		snips:         &models.SnipModel{DB: db},
-		templateCache: templateCache,
-		formDecoder:   formDecoder,
+		logInfo:        logInfo,
+		logError:       logError,
+		snips:          &models.SnipModel{DB: db},
+		templateCache:  templateCache,
+		formDecoder:    formDecoder,
+		sessionManager: sessionManager,
 	}
 
 	app.logInfo.Printf("Starting server on %s", *addr)
