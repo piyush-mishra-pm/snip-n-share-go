@@ -51,7 +51,6 @@ func (app *application) snipView(w http.ResponseWriter, r *http.Request) {
 
 	data := app.newTemplateData(r)
 	data.Snip = snip
-	data.Flash = app.sessionManager.PopString(r.Context(), "flash")
 
 	app.render(w, http.StatusOK, "view.tmpl.htm", data)
 }
