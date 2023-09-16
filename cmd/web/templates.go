@@ -13,6 +13,7 @@ type templateData struct {
 	Snips       []*models.Snip
 	CurrentYear int
 	Form        any
+	Flash       string
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {

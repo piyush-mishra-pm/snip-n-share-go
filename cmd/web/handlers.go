@@ -51,6 +51,7 @@ func (app *application) snipView(w http.ResponseWriter, r *http.Request) {
 
 	data := app.newTemplateData(r)
 	data.Snip = snip
+	data.Flash = app.sessionManager.PopString(r.Context(), "flash")
 
 	app.render(w, http.StatusOK, "view.tmpl.htm", data)
 }
@@ -88,6 +89,8 @@ func (app *application) snipCreatePost(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
+
+	app.sessionManager.Put(r.Context(), "flash", "✅ Snip successfully created!")
 
 	http.Redirect(w, r, fmt.Sprintf("/snip/view/%d", id), http.StatusSeeOther)
 }
