@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/piyush-mishra-pm/snip-n-share-go/internal/models"
 )
@@ -17,6 +18,7 @@ type application struct {
 	logError      *log.Logger
 	snips         *models.SnipModel
 	templateCache map[string]*template.Template
+	formDecoder   *form.Decoder
 }
 
 func main() {
@@ -38,11 +40,14 @@ func main() {
 		logError.Fatal(err)
 	}
 
+	formDecoder := form.NewDecoder()
+
 	app := &application{
 		logInfo:       logInfo,
 		logError:      logError,
 		snips:         &models.SnipModel{DB: db},
 		templateCache: templateCache,
+		formDecoder:   formDecoder,
 	}
 
 	app.logInfo.Printf("Starting server on %s", *addr)
